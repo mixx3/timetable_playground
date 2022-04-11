@@ -67,6 +67,8 @@ def get_credentials(
     if not group:
         raise HTTPException(403, "No group provided")
 
-    db_records = db.session.query(Credentials)
+    #db_records = db.session.query(Credentials)
+    # write all to db
+    # for further sessoin creation you will need only token
 
     return RedirectResponse(settings.REDIRECT_URL)
