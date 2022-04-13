@@ -16,7 +16,7 @@ from pydantic.types import Json
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from db import Credentials
+from db import UserData
 from settings import Settings
 from flow import UserFlow
 
@@ -34,21 +34,19 @@ def home(request: Request):
         {
             "request": request,
             "groups": settings.GROUPS,
-            "google_creds": settings.GOOGLE_CREDS,
         },
     )
 
 
 @app.get("/flow")
 def get_user_flow(state: str):
-    SCOPES = ['https://www.googleapis.com/auth/calendar']
     user_flow.create_flow(
         client_secrets_file='/Users/new/PycharmProjects/timetable-backend/calendar_backend/client_secret.json',
-        scopes=SCOPES,
+        scopes=settings.SCOPES,
         state=state,
-        redirect_uri='http://localhost:8000/credentials'
+        redirect_uri=settings.GOOGLE_CREDS["web"]["redirect_uris"][0]
     )
-    return RedirectResponse(user_flow.get_authorization_url()[0])
+    return RedirectResponse(user_flow.get_authorization_url())
 
 
 @app.get("/credentials")
@@ -67,8 +65,13 @@ def get_credentials(
     if not group:
         raise HTTPException(403, "No group provided")
 
-    #db_records = db.session.query(Credentials)
-    # write all to db
-    # for further sessoin creation you will need only token
-
+    db_records = db.session.query(UserData)
+    db.session.add(
+        UserData(
+            group=group,
+            scope=scope,
+            token=token
+        )
+    )
+    db.session.commit()
     return RedirectResponse(settings.REDIRECT_URL)
