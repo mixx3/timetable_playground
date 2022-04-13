@@ -1,17 +1,18 @@
 import google_auth_oauthlib.flow
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
-from pydantic.types import Json, Any
+from pydantic.types import Json
+from typing import Optional, List
 
 
 class UserFlow:
     def __init__(self):
-        self.flow: google_auth_oauthlib.flow.Flow = None
+        self.flow: Optional[google_auth_oauthlib.flow.Flow] = None
 
     def create_flow(
             self,
             client_secrets_file: str,
-            scopes: list[Any],
+            scopes: List[str],
             state: Json,
             redirect_uri: str
     ):
@@ -32,7 +33,7 @@ class UserFlow:
         return self.flow.credentials
 
 
-if __name__ == '__main__':
+def test_can_create_authorization_url():
     SCOPES = ['https://www.googleapis.com/auth/calendar']
     user_flow = UserFlow()
     user_flow.create_flow(
@@ -41,4 +42,8 @@ if __name__ == '__main__':
         state='101',
         redirect_uri='http://localhost:8000/credentials'
     )
-    print(user_flow.get_authorization_url())
+    return user_flow.get_authorization_url()
+
+
+if __name__ == '__main__':
+    print(test_can_create_authorization_url())
