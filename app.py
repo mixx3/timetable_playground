@@ -24,7 +24,7 @@ app = FastAPI(root_path=settings.APP_URL)
 templates = Jinja2Templates(directory="/Users/new/PycharmProjects/timetable-webapp/templates")
 app.add_middleware(DBSessionMiddleware, db_url=settings.DB_DSN)
 user_flow = Flow.from_client_secrets_file(
-    client_secrets_file='/Users/new/PycharmProjects/timetable-backend/calendar_backend/client_secret.json',
+    client_secrets_file=settings.PATH_TO_GOOGLE_CREDS,
     scopes=settings.SCOPES,
     state=settings.DEFAULT_GROUP,
     redirect_uri='http://localhost:8000/credentials'
@@ -45,7 +45,7 @@ def home(request: Request):
 @app.get("/flow")
 def get_user_flow(state: str):
     user_flow = Flow.from_client_secrets_file(
-        client_secrets_file='/Users/new/PycharmProjects/timetable-backend/calendar_backend/client_secret.json',
+        client_secrets_file=settings.PATH_TO_GOOGLE_CREDS,
         scopes=settings.SCOPES,
         state=state,
         redirect_uri='http://localhost:8000/credentials'
