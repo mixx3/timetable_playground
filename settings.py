@@ -4,18 +4,17 @@ import json
 from pydantic import BaseSettings, Json, PostgresDsn, AnyHttpUrl
 from typing import List, Optional
 
-with open('/Users/new/PycharmProjects/timetable-webapp/client_secret.json') as jfp:
-    json_str = jfp.read()
-
 
 class Settings(BaseSettings):
     """Application settings"""
 
     DB_DSN: PostgresDsn = os.getenv("FFPOSTGRES_DSN")
-    GOOGLE_CREDS: Json = json_str
+    PATH_TO_GOOGLE_CREDS: str = os.getenv('PATH_TO_CREDS')
     APP_URL: Optional[AnyHttpUrl] = None
     REDIRECT_URL: AnyHttpUrl = "https://www.profcomff.com"
     GROUPS: List[str] = ["101", "102"]
+    DEFAULT_GROUP = '{group: 101}'
+    SCOPES = ['https://www.googleapis.com/auth/calendar']
 
     class Config:
         """Pydantic BaseSettings config"""
