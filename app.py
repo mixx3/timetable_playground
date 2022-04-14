@@ -18,13 +18,17 @@ from googleapiclient.errors import HttpError
 
 from db import UserData
 from settings import Settings
-from flow import UserFlow
 
 settings = Settings()
 app = FastAPI(root_path=settings.APP_URL)
 templates = Jinja2Templates(directory="/Users/new/PycharmProjects/timetable-webapp/templates")
 app.add_middleware(DBSessionMiddleware, db_url=settings.DB_DSN)
-user_flow = UserFlow()
+user_flow = Flow.from_client_secrets_file(
+    client_secrets_file='/Users/new/PycharmProjects/timetable-backend/calendar_backend/client_secret.json',
+    scopes=settings.SCOPES,
+    state=settings.DEFAULT_GROUP,
+    redirect_uri='http://localhost:8000/credentials'
+)
 
 
 @app.get("/")
@@ -40,13 +44,13 @@ def home(request: Request):
 
 @app.get("/flow")
 def get_user_flow(state: str):
-    user_flow.create_flow(
+    user_flow = Flow.from_client_secrets_file(
         client_secrets_file='/Users/new/PycharmProjects/timetable-backend/calendar_backend/client_secret.json',
         scopes=settings.SCOPES,
         state=state,
-        redirect_uri=settings.GOOGLE_CREDS["web"]["redirect_uris"][0]
+        redirect_uri='http://localhost:8000/credentials'
     )
-    return RedirectResponse(user_flow.get_authorization_url()[0])
+    return RedirectResponse(user_flow.authorization_url()[0])
 
 
 @app.get("/credentials")
@@ -58,8 +62,8 @@ def get_credentials(
 ):
     scope = scope.split(unquote("%20"))
     group = state.get("group")
-    user_flow.get_token(code=code)
-    creds = user_flow.get_credentials()
+    user_flow.fetch_token(code=code)
+    creds = user_flow.credentials
     token: Json = creds.to_json()
 
     if not group:
