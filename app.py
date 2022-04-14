@@ -46,7 +46,7 @@ def get_user_flow(state: str):
         state=state,
         redirect_uri=settings.GOOGLE_CREDS["web"]["redirect_uris"][0]
     )
-    return RedirectResponse(user_flow.get_authorization_url())
+    return RedirectResponse(user_flow.get_authorization_url()[0])
 
 
 @app.get("/credentials")
