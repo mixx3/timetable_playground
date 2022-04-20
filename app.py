@@ -1,3 +1,4 @@
+import json
 from email import message
 from urllib.parse import unquote
 import os
@@ -60,26 +61,29 @@ def get_credentials(
         code: str,
         scope: str,
         state: Json,
-        authuser: int = 0,
 ):
     scope = scope.split(unquote("%20"))
     group = state.get("group")
     user_flow.fetch_token(code=code)
     creds = user_flow.credentials
     token: Json = creds.to_json()
+    json_token = json.loads(token)
+    client_id: str = json_token['client_id']
+    is_valid_token: bool = 'refresh_token' in json_token.keys()
+    #background_tasks.add_task(get_service, creds)
 
     if not group:
         raise HTTPException(403, "No group provided")
 
-    db_records = db.session.query(Credentials).filter(Credentials.authuser == authuser)
+    db_records = db.session.query(Credentials).filter(Credentials.client_id == client_id)
 
-    if not db_records.count():
+    if not db_records.count() and is_valid_token:
         db.session.add(
             Credentials(
                 group=group,
+                client_id=client_id,
                 scope=scope,
                 token=token,
-                authuser=authuser
             )
         )
     else:
@@ -89,6 +93,5 @@ def get_credentials(
                 scope=scope,
             )
         )
-
     db.session.commit()
     return RedirectResponse(settings.REDIRECT_URL)
