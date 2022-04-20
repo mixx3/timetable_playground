@@ -11,7 +11,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from db import Credentials, UserData
+from db import Credentials
 from settings import Settings
 
 # If modifying these scopes, delete the file token.pickle.
@@ -22,7 +22,7 @@ db = sessionmaker(bind=connection)()
 
 
 def get_calendar_service(id: int):
-    user_data = db.query(UserData).filter_by(id=id).one()
+    user_data = db.query(Credentials).filter_by(id=id).one()
     credentials = google.oauth2.credentials.Credentials.from_authorized_user_info(json.loads(user_data.token), SCOPES)
     service = build('calendar', 'v3', credentials=credentials)
     return service
