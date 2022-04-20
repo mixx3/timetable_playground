@@ -16,13 +16,14 @@ from pydantic.types import Json
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from db import UserData
+from db import Credentials
 from settings import Settings
 
 settings = Settings()
 app = FastAPI(root_path=settings.APP_URL)
 templates = Jinja2Templates(directory="/Users/new/PycharmProjects/timetable-webapp/templates")
 app.add_middleware(DBSessionMiddleware, db_url=settings.DB_DSN)
+
 user_flow = Flow.from_client_secrets_file(
     client_secrets_file=settings.PATH_TO_GOOGLE_CREDS,
     scopes=settings.SCOPES,
@@ -59,6 +60,7 @@ def get_credentials(
         code: str,
         scope: str,
         state: Json,
+        authuser: int = 0,
 ):
     scope = scope.split(unquote("%20"))
     group = state.get("group")
@@ -69,13 +71,24 @@ def get_credentials(
     if not group:
         raise HTTPException(403, "No group provided")
 
-    db_records = db.session.query(UserData)
-    db.session.add(
-        UserData(
-            group=group,
-            scope=scope,
-            token=token
+    db_records = db.session.query(Credentials).filter(Credentials.authuser == authuser)
+
+    if not db_records.count():
+        db.session.add(
+            Credentials(
+                group=group,
+                scope=scope,
+                token=token,
+                authuser=authuser
+            )
         )
-    )
+    else:
+        db_records.update(
+            dict(
+                group=group,
+                scope=scope,
+            )
+        )
+
     db.session.commit()
     return RedirectResponse(settings.REDIRECT_URL)
